@@ -337,7 +337,7 @@ function configure_seed() {
 
   # Owner role on invoice section
   local app_obj_id
-  app_obj_id="$(az ad app show --id "${sp_id}" --query id -otsv)"
+  app_obj_id="$(az ad sp show --id "${sp_id}" --query id -otsv)"
   _log_ok "Assign billing roles to service principal on invoice section"
   _assign_billing_role "${app_obj_id}" "30000000-aaaa-bbbb-cccc-100000000000" "$(_get_tenant_id)" \
     "$(get_billing_id_path "${BILLING_ACCOUNT_NAME}" "${BILLING_PROFILE_NAME}" "${BILLING_INVOICE_SECTION_NAME}")"
