@@ -343,7 +343,7 @@ function _create_service_principal() {
   local sp_name="${1}" # Name of the service principal.
   local scopes="${2}" # Space-separated list of scopes the service principal's role assignment applies to.
   local role_name="${3}" # Role of the service principal.
-  local sp_id=""
+  local sp_app_id=""
 
   if [[ -z "${sp_name}" ]]; then _log_error "Service principal name is required"; return 1; fi
   if [[ -z "${scopes}" ]]; then _log_error "Scopes parameter is required"; return 1; fi
@@ -351,30 +351,31 @@ function _create_service_principal() {
 
   if result=$(az ad sp create-for-rbac --only-show-errors --display-name "${sp_name}" --role="${role_name}" \
     --scopes="${scopes}" --query "appId" --out tsv 2>&1); then
-    sp_id="${result}"
+    sp_app_id="${result}"
   fi
 
-  echo "${sp_id}"
+  # Returns service principal application id
+  echo "${sp_app_id}"
 }
 
 # Establish trust between your OIDC issuer URL and the service principal.
 function _create_sp_federated_credentials() {
   local federated_credential_name="${1}" # Name of the federated credential.
-  local sp_id="${2}" # Name of the service principal.
+  local sp_app_id="${2}" # The service principal app id.
   local issuer_url="${3}" # The OIDC issuer URL
 
   [[ -z "${federated_credential_name}" ]] && _log_error "Name of the federated credential is required" && return 1
-  [[ -z "${sp_id}" ]] && _log_error "Name of the service principal is required" && return 1
+  [[ -z "${sp_app_id}" ]] && _log_error "Name of the service principal is required" && return 1
   [[ -z "${issuer_url}" ]] && _log_error "The OIDC issuer URL is required" && return 1
 
   if az ad app federated-credential show --only-show-errors --federated-credential-id "${federated_credential_name}" \
-    --id "${sp_id}" > /dev/null 2>&1;
+    --id "${sp_app_id}" > /dev/null 2>&1;
   then
     _log_ok "Federated Credential with name ${federated_credential_name} already exists."; return
   fi
 
   local app_obj_id
-  app_obj_id="$(az ad app show --id "${sp_id}" --query id -otsv)"
+  app_obj_id="$(az ad app show --id "${sp_app_id}" --query id -otsv)"
 
   cat <<EOF > params.json
 {
@@ -398,7 +399,7 @@ function _configure_sp_permissions() {
   local billing_id_path="${3}" # Billing ids in form 'billingAccounts/xxx/billingProfiles/xxx/invoiceSections/xxx'
 
   local sp_name # Name of the service principal.
-  local sp_id # Client id of the service principal.
+  local sp_app_id # Service principal application id (Client id in google secret).
   local fc_name # Name of the federated credential.
   local scope # The role assignment scope.
 
@@ -420,24 +421,24 @@ function _configure_sp_permissions() {
   # The stage name match the top level management group name
   scope="$(_get_management_group_id "${stage_name}")"
 #  echo "DEBUG: sp_name: ${sp_name}, scope: ${scope}"
-  sp_id=$(_create_service_principal "${sp_name}" "${scope}" "Contributor")
-#  echo "DEBUG: sp_id: ${sp_id}"
+  sp_app_id=$(_create_service_principal "${sp_name}" "${scope}" "Contributor")
+#  echo "DEBUG: sp_app_id: ${sp_app_id}"
   # Assign roles
   # Contributor role on default subscription
   scope=$(_get_subscription_scope_id)
-  _log_ok "Assigning roles to service principal: ${sp_name} on scope ${scope}... for ${sp_id}"
-  _assign_role "${sp_id}" "Contributor" "${scope}"
+  _log_ok "Assigning roles to service principal: ${sp_name} on scope ${scope}... for ${sp_app_id}"
+  _assign_role "${sp_app_id}" "Contributor" "${scope}"
 
   # Owner role on invoice section
-  local app_obj_id
-  app_obj_id="$(az ad sp show --id "${sp_id}" --query id -otsv)"
+  local sp_obj_id
+  sp_obj_id="$(az ad sp show --id "${sp_app_id}" --query id -otsv)"
   _log_ok "Assign billing roles to service principal on invoice section"
-  _assign_billing_role "${app_obj_id}" "30000000-aaaa-bbbb-cccc-100000000000" "$(_get_tenant_id)" "${billing_id_path}"
+  _assign_billing_role "${sp_obj_id}" "30000000-aaaa-bbbb-cccc-100000000000" "$(_get_tenant_id)" "${billing_id_path}"
 
   # Create federated credentials
   _log_ok "Creating federated credentials for service principal: ${sp_name} ..."
   _create_sp_federated_credentials "${fc_name}" \
-    "${sp_id}" "$(_get_parameter_by_key "$(_get_lifecycle_stage "${stage_name}")" "${issuer_url_map[@]}")"
+    "${sp_app_id}" "$(_get_parameter_by_key "$(_get_lifecycle_stage "${stage_name}")" "${issuer_url_map[@]}")"
 }
 
 # Get the values to create secrets for ASO
@@ -454,14 +455,14 @@ function _get_sp_output() {
   if [[ -z "${tenant_id}" ]]; then _log_error "The Azure tenant id is required"; return 1; fi
 
   local sp_name # Name of the service principal.
-  local sp_id # The service principal id.
+  local sp_app_id # The service principal id.
 
   sp_name=$(_to_lowercase "${name_prefix}-${stage_name}-sp")
-  sp_id=$(az ad sp list --display-name "${sp_name}" --query "[].{spID:appId}" --output tsv)
+  sp_app_id=$(az ad sp list --display-name "${sp_name}" --query "[].{spID:appId}" --output tsv)
   output=$(printf '%s\n%s\n%s\n%s' \
     "AZURE_SUBSCRIPTION_ID=${subscription_id}" \
     "AZURE_TENANT_ID=${tenant_id}" \
-    "AZURE_CLIENT_ID=${sp_id}" \
+    "AZURE_CLIENT_ID=${sp_app_id}" \
     "USE_WORKLOAD_IDENTITY_AUTH=true"
   )
   echo "${output}"
