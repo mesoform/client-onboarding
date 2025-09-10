@@ -133,6 +133,27 @@ function _create_project() {
     fi
 }
 
+# Assign IAM role to a service account on a folder
+function _assign_folder_iam_role() {
+    local folder_id="${1}"
+    local service_account_email="${2}"
+    local role="${3}"
+
+    if [[ -z "${folder_id}" ]]; then _log_error "Folder ID is required"; return 1; fi
+    if [[ -z "${service_account_email}" ]]; then _log_error "Service account email is required"; return 1; fi
+    if [[ -z "${role}" ]]; then _log_error "Role is required"; return 1; fi
+
+    _log_info "Assigning role '${role}' to '${service_account_email}' on folder '${folder_id}'"
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      _log_cmd "gcloud resource-manager folders add-iam-policy-binding \"${folder_id}\" --member=\"serviceAccount:${service_account_email}\" --role=\"${role}\" --condition=None"
+    else
+      gcloud resource-manager folders add-iam-policy-binding "${folder_id}" \
+          --member="serviceAccount:${service_account_email}" \
+          --role="${role}" \
+          --condition=None > /dev/null
+    fi
+}
+
 # Assign IAM role to a service account on a project
 function _assign_project_iam_role() {
     local project_id="${1}"

@@ -138,34 +138,45 @@ function build_lifecycle_list() {
 
 function apply_stage_config() {
     local stage_name="${1}"
+    local parent_folder_id="${2}"
     local athena_project_id
     local service_account_email
+    local athena_gsa_project_id
+    local athena_sha
 
     athena_project_id=$(_get_athena_project_name "${ORG_DOMAIN}" "${stage_name}")
     service_account_email="cloudspace-creator@${athena_project_id}.iam.gserviceaccount.com"
 
-    _log_ok "Configuring Athena project and permissions for stage: ${stage_name}"
-    _create_project "${athena_project_id}"
-
-    _log_ok "Assigning IAM roles for ${service_account_email}"
-    _assign_project_iam_role "${athena_project_id}" "${service_account_email}" "roles/resourcemanager.projectCreator"
-    _assign_project_iam_role "${athena_project_id}" "${service_account_email}" "roles/resourcemanager.projectDeleter"
-    _assign_project_iam_role "${athena_project_id}" "${service_account_email}" "roles/resourcemanager.projectIamAdmin"
+    _log_ok "Assigning IAM roles for stage '${stage_name}' to folder '${parent_folder_id}'"
+    _assign_folder_iam_role "${parent_folder_id}" "${service_account_email}" "roles/resourcemanager.projectCreator"
+    _assign_folder_iam_role "${parent_folder_id}" "${service_account_email}" "roles/resourcemanager.projectDeleter"
+    _assign_folder_iam_role "${parent_folder_id}" "${service_account_email}" "roles/resourcemanager.projectIamAdmin"
     _assign_billing_iam_role "${GCP_BILLING_ACCOUNT_ID}" "${service_account_email}"
+
+    # Create the athena-gsa project inside the stage folder
+    athena_sha=$(echo -n "${athena_project_id}" | cut -c 3-)
+    athena_gsa_project_id="athena-gsa-${stage_name}-$(echo -n "${athena_sha}" | head -c 8)"
+    _log_ok "Creating athena-gsa project for stage '${stage_name}'"
+    _create_project "${athena_gsa_project_id}" "${parent_folder_id}"
 }
 
 function apply() {
-  _log_ok "Creating folder structure..."
-  for env_path in "${ENVIRONMENTS_LIST[@]}"; do
-    _log_info "Processing folder path: ${env_path}"
-    _create_folder_hierarchy "${env_path}" "organizations/${GCP_ORG_ID}"
-  done
-
-  _log_ok "Configuring Athena projects and service accounts for each lifecycle stage..."
+  _log_ok "Processing lifecycle stages..."
   for stage in "${LIFECYCLE_STAGES[@]}"; do
-    apply_stage_config "${stage}"
-  done
+    _log_ok "--- Stage: ${stage} ---"
+    # Create the top-level stage folder (e.g., 'development', 'production')
+    local stage_folder_id
+    stage_folder_id=$(_create_folder "${stage}" "organizations/${GCP_ORG_ID}")
 
+    # Create subfolders and apply permissions
+    for env_path in "${ENVIRONMENTS_LIST[@]}"; do
+      if [[ "${env_path}" == "${stage}"* ]]; then
+        _log_info "Processing folder path: ${env_path}"
+        _create_folder_hierarchy "${env_path}" "organizations/${GCP_ORG_ID}"
+      fi
+    done
+    apply_stage_config "${stage}" "${stage_folder_id}"
+  done
   _log_ok "Setup complete."
 }
 
