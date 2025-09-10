@@ -54,9 +54,25 @@ The same Athena service accounts (`cloudspace-creator@...`) for both `developmen
 
 ## How to Use
 
-1.  **Prerequisites**: Ensure you have the `gcloud` CLI installed and have authenticated with an account that has `resourcemanager.organizationAdmin` and `billing.admin` permissions on your GCP organization.
+### 1. Prerequisites
 
-2.  **Initialize**:
+Before running the scripts, please ensure the following requirements are met:
+
+*   **Google Cloud SDK**: The `gcloud` command-line tool must be installed on your system. You can find installation instructions at the Google Cloud SDK documentation.
+
+*   **Authentication**: You must be authenticated with an account that has sufficient permissions on the target Google Cloud organization.
+    *   **Required Roles**:
+        *   `roles/resourcemanager.organizationAdmin` on the organization.
+        *   `roles/billing.admin` on the billing account.
+    *   **Authentication Commands**: Run the following commands to authenticate both the CLI and your application default credentials:
+        ```sh
+        gcloud auth login
+        gcloud auth application-default login
+        ```
+
+*   **Athena Project**: You must have already been onboarded by Mesoform. This process creates the necessary Athena management project and the `cloudspace-creator` service account that these scripts grant permissions to.
+
+### 2. Initialize
     Run the `init` command to generate a `.env` file with your organization's details.
     ```sh
     ./google/bin/config.sh init \
@@ -65,13 +81,13 @@ The same Athena service accounts (`cloudspace-creator@...`) for both `developmen
       --billing-id "01A2B3-C4D5E6-F7G8H9"
     ```
 
-3.  **Dry Run (Recommended)**:
+### 3. Dry Run (Recommended)
     Review the changes that will be made without applying them.
     ```sh
     ./google/bin/config.sh apply --dry-run
     ```
 
-4.  **Apply**:
+### 4. Apply
     Execute the script to create the infrastructure.
     ```sh
     ./google/bin/config.sh apply
