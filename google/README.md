@@ -52,17 +52,6 @@ For each top-level lifecycle folder (`development` and `production`), the script
 
 The same Athena service accounts (`cloudspace-creator@...`) for both `development` and `production` are granted the `roles/billing.user` role on the specified `GCP_BILLING_ACCOUNT_ID`. This allows the service account to associate newly created projects with the organization's billing account.
 
-### 4. Athena GSA Project
-
-Inside each top-level lifecycle folder (`development` and `production`), a dedicated project is created to house resources related to the Google Service Account (GSA).
-
-*   **Project Name**: `athena-gsa-<stage_name>-<short_sha>`
-    *   `<stage_name>` is either `development` or `production`.
-    *   `<short_sha>` is the first 8 characters of the SHA hash used in the Athena project ID.
-*   **Example Project Created**:
-    *   `athena-gsa-development-abcdef12` (inside the `development` folder)
-    *   `athena-gsa-production-ghijkl34` (inside the `production` folder)
-
 ## How to Use
 
 1.  **Prerequisites**: Ensure you have the `gcloud` CLI installed and have authenticated with an account that has `resourcemanager.organizationAdmin` and `billing.admin` permissions on your GCP organization.
