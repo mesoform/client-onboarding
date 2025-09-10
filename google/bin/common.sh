@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+DRY_RUN=false
+
 function _log_error() {
   echo -e "\033[1;31m${1}\033[0m"
 }
@@ -14,6 +16,10 @@ function _log_begin() {
 
 function _log_info() {
   echo "${1}"
+}
+
+function _log_cmd() {
+  echo -e "\033[0;36m${1}\033[0m"
 }
 
 function _to_lowercase() {
@@ -82,7 +88,11 @@ function _create_folder() {
   fi
 
   _log_info "Creating folder: ${folder_name} under parent ${parent_id}"
-  gcloud resource-manager folders create --display-name="${folder_name}" --parent="${parent_id}" --format="value(ID)"
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    _log_cmd "gcloud resource-manager folders create --display-name=\"${folder_name}\" --parent=\"${parent_id}\" --format=\"value(ID)\""
+  else
+    gcloud resource-manager folders create --display-name="${folder_name}" --parent="${parent_id}" --format="value(ID)"
+  fi
 }
 
 # Create hierarchy of folders
@@ -115,7 +125,11 @@ function _create_project() {
         _log_info "Project '${project_id}' already exists."
     else
         _log_info "Creating project '${project_id}'..."
-        gcloud projects create "${project_id}" ${parent_folder_id:+--folder="${parent_folder_id}"}
+        if [[ "${DRY_RUN}" == "true" ]]; then
+          _log_cmd "gcloud projects create \"${project_id}\" ${parent_folder_id:+--folder=\"${parent_folder_id}\"}"
+        else
+          gcloud projects create "${project_id}" ${parent_folder_id:+--folder="${parent_folder_id}"}
+        fi
     fi
 }
 
@@ -130,10 +144,14 @@ function _assign_project_iam_role() {
     if [[ -z "${role}" ]]; then _log_error "Role is required"; return 1; fi
 
     _log_info "Assigning role '${role}' to '${service_account_email}' on project '${project_id}'"
-    gcloud projects add-iam-policy-binding "${project_id}" \
-        --member="serviceAccount:${service_account_email}" \
-        --role="${role}" \
-        --condition=None > /dev/null
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      _log_cmd "gcloud projects add-iam-policy-binding \"${project_id}\" --member=\"serviceAccount:${service_account_email}\" --role=\"${role}\" --condition=None"
+    else
+      gcloud projects add-iam-policy-binding "${project_id}" \
+          --member="serviceAccount:${service_account_email}" \
+          --role="${role}" \
+          --condition=None > /dev/null
+    fi
 }
 
 # Assign Billing User role to a service account on a billing account
@@ -145,7 +163,11 @@ function _assign_billing_iam_role() {
     if [[ -z "${service_account_email}" ]]; then _log_error "Service account email is required"; return 1; fi
 
     _log_info "Assigning Billing User role to '${service_account_email}' on billing account '${billing_account_id}'"
-    gcloud billing accounts add-iam-policy-binding "${billing_account_id}" \
-        --member="serviceAccount:${service_account_email}" \
-        --role="roles/billing.user" > /dev/null
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      _log_cmd "gcloud billing accounts add-iam-policy-binding \"${billing_account_id}\" --member=\"serviceAccount:${service_account_email}\" --role=\"roles/billing.user\""
+    else
+      gcloud billing accounts add-iam-policy-binding "${billing_account_id}" \
+          --member="serviceAccount:${service_account_email}" \
+          --role="roles/billing.user" > /dev/null
+    fi
 }

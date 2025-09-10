@@ -45,6 +45,8 @@ function print_help() {
 		  --org-id         Google Cloud Organization ID. Required.
 		  --billing-id     Google Cloud Billing Account ID. Required.
 
+		Apply parameters:
+		  --dry-run        Output the commands that would be run without actually running them.
 		Global parameters:
 		  --help -h        Print help.
 		EOF
@@ -91,6 +93,11 @@ function parse_args() {
     --billing-id)
       GCP_BILLING_ACCOUNT_ID="${2}"
       shift 2
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      export DRY_RUN
+      shift
       ;;
     -h | --help)
       print_help && exit 0
@@ -189,6 +196,10 @@ function main() {
   validate_input
   _check_prerequisites
   build_lifecycle_list
+  
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    _log_ok "Dry run mode enabled. No changes will be made."
+  fi
 
   _log_ok "Run: ${COMMAND_DISPLAY_NAME}"
   ${COMMAND}
