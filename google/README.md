@@ -73,22 +73,22 @@ Before running the scripts, please ensure the following requirements are met:
 *   **Athena Project**: You must have already been onboarded by Mesoform. This process creates the necessary Athena management project and the `cloudspace-creator` service account that these scripts grant permissions to.
 
 ### 2. Initialize
-    Run the `init` command to generate a `.env` file with your organization's details.
-    ```sh
-    ./google/bin/config.sh init \
-      --domain "your-company.com" \
-      --org-id "123456789012" \
-      --billing-id "01A2B3-C4D5E6-F7G8H9"
-    ```
+Run the `init` command to generate a `.env` file with your organization's details.
+```sh
+./google/bin/config.sh init \
+  --domain "your-company.com" \
+  --org-id "123456789012" \
+  --billing-id "01A2B3-C4D5E6-F7G8H9"
+```
 
 ### 3. Dry Run (Recommended)
-    Review the changes that will be made without applying them.
-    ```sh
-    ./google/bin/config.sh apply --dry-run
-    ```
+Review the changes that will be made without applying them.
+```sh
+./google/bin/config.sh apply --dry-run
+```
 
 ### 4. Apply
-    Execute the script to create the infrastructure.
-    ```sh
-    ./google/bin/config.sh apply
-    ```
+Execute the script to create the infrastructure.
+```sh
+./google/bin/config.sh apply
+```
