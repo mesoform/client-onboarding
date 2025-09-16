@@ -70,7 +70,7 @@ Before running the scripts, please ensure the following requirements are met:
         gcloud auth application-default login
         ```
 
-*   **Athena Project**: You must have already been onboarded by Mesoform. This process creates the necessary Athena management project and the `cloudspace-creator` service account that these scripts grant permissions to.
+*   **Athena Project**: You must have already been onboarded by Mesoform (see [athena.mesoform.com](https://athena.mesoform.com)). This process creates the necessary Athena management project and the `cloudspace-creator` service account that these scripts grant permissions to.
 
 ### 2. Initialize
 Run the `init` command to generate a `.env` file with your organization's details.
