@@ -154,48 +154,6 @@ function _create_folder() {
   fi
 }
 
-# Create hierarchy of folders
-function _create_folder_hierarchy() {
-  local folder_path="${1}"
-  local parent_id="${2}" # e.g. organizations/12345
-  local current_parent_id="${parent_id}"
-  local folder_name
-  local path_to_create="${folder_path}"
-
-  # If the parent is a folder, we only need to create the sub-path.
-  if [[ "${parent_id}" == "folders/"* ]]; then
-    path_to_create=$(echo "${folder_path}" | sed 's/^[^\/]*\///')
-  fi
-
-  # Only proceed if there are sub-folders to create.
-  for folder_name in $(echo "${path_to_create}" | sed 's/\// /g'); do
-    current_parent_id=$(_create_folder "${folder_name}" "${current_parent_id}")
-    if [[ -z "${current_parent_id}" ]]; then
-      _log_error "Failed to create or find folder '${folder_name}'. Aborting hierarchy creation."
-      return 1
-    fi
-  done
-  echo "${current_parent_id}"
-}
-
-# Create project if it doesn't exist
-function _create_project() {
-    local project_id="${1}"
-    local parent_folder_id="${2}"
-
-    if [[ -z "${project_id}" ]]; then _log_error "Project ID is required"; return 1; fi
-
-    # Read-only command, safe to run in all modes.
-    if _run projects describe "${project_id}" > /dev/null 2>&1; then
-        _log_info "Project '${project_id}' already exists." >&2
-    else
-        _log_info "Creating project '${project_id}'..."
-        # This is a write command, so we use the _run_gcloud wrapper
-        # which respects DRY_RUN.
-        _run projects create "${project_id}" ${parent_folder_id:+--folder="${parent_folder_id}"}
-    fi
-}
-
 # Assign IAM role to a service account on a folder
 function _assign_folder_iam_role() {
     local folder_id="${1}"
