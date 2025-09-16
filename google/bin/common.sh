@@ -181,5 +181,9 @@ function _assign_billing_iam_role() {
     if [[ -z "${service_account_email}" ]]; then _log_error "Service account email is required"; return 1; fi
 
     _log_info "Assigning Billing User role to '${service_account_email}' on billing account '${billing_account_id}'" >&2
-    _run billing accounts add-iam-policy-binding "${billing_account_id}" --member="serviceAccount:${service_account_email}" --role="roles/billing.user" > /dev/null
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      _log_cmd "gcloud billing accounts add-iam-policy-binding ${billing_account_id} --member=\"serviceAccount:${service_account_email}\" --role=\"roles/billing.user\""
+    else
+      _run billing accounts add-iam-policy-binding "${billing_account_id}" --member="serviceAccount:${service_account_email}" --role="roles/billing.user" > /dev/null
+    fi
 }
