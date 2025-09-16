@@ -166,24 +166,10 @@ function _assign_folder_iam_role() {
 
     _log_info "Assigning role '${role}' to '${service_account_email}' on folder '${folder_id}'" >&2
     if [[ "${DRY_RUN}" == "true" ]]; then
-        _log_cmd "gcloud resource-manager folders create --display-name=\"${folder_name}\" ${scope_arg} --format=\"value(name)\""
+        _log_cmd "gcloud resource-manager folders add-iam-policy-binding ${folder_id} --member=\"serviceAccount:${service_account_email}\" --role=\"${role}\" --condition=None"
     else
         _run resource-manager folders add-iam-policy-binding "${folder_id}" --member="serviceAccount:${service_account_email}" --role="${role}" --condition=None > /dev/null
     fi
-}
-
-# Assign IAM role to a service account on a project
-function _assign_project_iam_role() {
-    local project_id="${1}"
-    local service_account_email="${2}"
-    local role="${3}"
-
-    if [[ -z "${project_id}" ]]; then _log_error "Project ID is required"; return 1; fi
-    if [[ -z "${service_account_email}" ]]; then _log_error "Service account email is required"; return 1; fi
-    if [[ -z "${role}" ]]; then _log_error "Role is required"; return 1; fi
-
-    _log_info "Assigning role '${role}' to '${service_account_email}' on project '${project_id}'" >&2
-    _run projects add-iam-policy-binding "${project_id}" --member="serviceAccount:${service_account_email}" --role="${role}" --condition=None > /dev/null
 }
 
 # Assign Billing User role to a service account on a billing account
