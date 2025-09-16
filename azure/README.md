@@ -69,7 +69,7 @@ Before running the scripts, please ensure the following requirements are met:
         az login
         ```
 
-*   **Athena Project**: You must have already been onboarded by Mesoform. This provides the OIDC issuer URLs required for setting up federated credentials.
+*   **Athena Project**: You must have already been onboarded by Mesoform (see [athena.mesoform.com](https://athena.mesoform.com)). This provides the OIDC issuer URLs required for setting up federated credentials.
 
 ### 2. Initialize
 

@@ -2,7 +2,7 @@
 
 This repository contains a collection of scripts designed to bootstrap a foundational organizational structure on
 different Cloud Service Providers (CSPs). The primary goal is to prepare a new cloud environment for management by
-Mesoform's Athena platform.
+[Mesoform's Athena platform](https://athena.mesoform.com).
 
 By running these scripts, you will create the necessary management hierarchies and delegate permissions, enabling Athena
 to provision and manage cloud resources like CloudSpaces, which in turn create projects (GCP) and subscriptions (Azure).
