@@ -63,6 +63,7 @@ Before running the scripts, please ensure the following requirements are met:
 *   **Authentication**: You must be authenticated with an account that has sufficient permissions on the target Google Cloud organization.
     *   **Required Roles**:
         *   `roles/resourcemanager.organizationAdmin` on the organization.
+        *   `roles/resourcemanager.folderAdmin` on the organization.
         *   `roles/billing.admin` on the billing account.
     *   **Authentication Commands**: Run the following commands to authenticate both the CLI and your application default credentials:
         ```sh
