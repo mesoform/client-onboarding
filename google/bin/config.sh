@@ -155,6 +155,7 @@ function apply_stage_config() {
     _assign_folder_iam_role "${parent_folder_id}" "${service_account_email}" "roles/resourcemanager.projectCreator"
     _assign_folder_iam_role "${parent_folder_id}" "${service_account_email}" "roles/resourcemanager.projectDeleter"
     _assign_folder_iam_role "${parent_folder_id}" "${service_account_email}" "roles/resourcemanager.projectIamAdmin"
+    _assign_folder_iam_role "${parent_folder_id}" "${service_account_email}" "roles/billing.projectManager"
     _assign_billing_iam_role "${GCP_BILLING_ACCOUNT_ID}" "${service_account_email}"
 }
 
