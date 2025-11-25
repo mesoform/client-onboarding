@@ -45,8 +45,9 @@ For each top-level lifecycle folder (`development` and `production`), the script
     *   `roles/resourcemanager.projectCreator`: Allows creation of new GCP projects within the `development` folder.
     *   `roles/resourcemanager.projectDeleter`: Allows deletion of GCP projects within the `development` folder.
     *   `roles/resourcemanager.projectIamAdmin`: Allows management of IAM policies on projects within the `development` folder.
+    *   `roles/billing.projectManager`: Allows management of the billing account attached to projects within `development` folder.
 *   **Permissions Granted on `production` folder**:
-    *   The same set of roles (`projectCreator`, `projectDeleter`, `projectIamAdmin`) are granted to the corresponding `production` service account on the `production` folder.
+    *   The same set of roles (`projectCreator`, `projectDeleter`, `projectIamAdmin`, `billing.projectManager`) are granted to the corresponding `production` service account on the `production` folder.
 
 ### 3. Billing Permissions
 
