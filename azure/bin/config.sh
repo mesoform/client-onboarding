@@ -318,7 +318,7 @@ function configure_seed() {
   local resource_group_name
   local service_principal_name
   local federated_credential_name
-  local sp_id
+  local sp_app_id
 
   resource_group_name=$(_to_lowercase "${NAME_PREFIX}-seed-rg")
   service_principal_name=$(_to_lowercase "${NAME_PREFIX}-seed-sp")
@@ -330,21 +330,21 @@ function configure_seed() {
 
   # Service principal
   _log_ok "Creating service principal: ${service_principal_name} ..."
-  sp_id=$(_create_service_principal "${service_principal_name}" "$(_get_subscription_scope_id)" "Contributor")
+  sp_app_id=$(_create_service_principal "${service_principal_name}" "$(_get_subscription_scope_id)" "Contributor")
 
   _log_ok "Assigning roles to service principal: ${service_principal_name} ..."
-  _assign_role "${sp_id}" "Contributor" "$(_get_resource_group_id "${resource_group_name}")"
+  _assign_role "${sp_app_id}" "Contributor" "$(_get_resource_group_id "${resource_group_name}")"
 
   # Owner role on invoice section
-  local app_obj_id
-  app_obj_id="$(az ad app show --id "${sp_id}" --query id -otsv)"
+  local sp_obj_id
+  sp_obj_id="$(az ad sp show --id "${sp_app_id}" --query id -otsv)"
   _log_ok "Assign billing roles to service principal on invoice section"
-  _assign_billing_role "${app_obj_id}" "30000000-aaaa-bbbb-cccc-100000000000" "$(_get_tenant_id)" \
+  _assign_billing_role "${sp_obj_id}" "30000000-aaaa-bbbb-cccc-100000000000" "$(_get_tenant_id)" \
     "$(get_billing_id_path "${BILLING_ACCOUNT_NAME}" "${BILLING_PROFILE_NAME}" "${BILLING_INVOICE_SECTION_NAME}")"
 
   _log_ok "Creating federated credentials for service principal: ${service_principal_name} ..."
   _create_sp_federated_credentials "${federated_credential_name}" \
-    "${sp_id}" "$(_get_parameter_by_key "production" "${OIDC_ISSUER_URLS[@]}")"
+    "${sp_app_id}" "$(_get_parameter_by_key "production" "${OIDC_ISSUER_URLS[@]}")"
 }
 
 function seed_output() {
